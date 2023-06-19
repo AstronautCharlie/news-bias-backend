@@ -8,10 +8,11 @@ class DynamoClient():
         self.dynamodb = boto3.resource('dynamodb')
         self.table = self.dynamodb.Table(DynamoConfig.TABLE_NAME)
 
-    def query_item(self, date):
+    def query_item(self, date, limit=10):
         key_condition_expression = Key('date').eq(date)
         kwargs = {
-            'KeyConditionExpression': key_condition_expression
+            'KeyConditionExpression': key_condition_expression,
+            'Limit': limit
         }
         response = self.table.query(**kwargs)
         try:
