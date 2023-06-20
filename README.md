@@ -7,7 +7,7 @@ Navigate to top level directory
 Run `python api`
 
 # What's the last thing I did? 
-Fetch stories in a date range and load them into SubjectModels
+Moved code for fetching articles in a date range to the DynamoClient. 
 
 # What's next to do? 
-Move code for fetching stories in date range into SubjectModels into a service - it shouldn't be its own endpoint. The endpoint should get embeddings of articles based on subject matter. 
+Create the chat client and use it to guess at which headlines are relevant to the subject matter

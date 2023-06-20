@@ -19,22 +19,14 @@ def get_subject_matter_in_date_range():
     except Exception as err:
         logging.error(f'Query parameter validation failed with error :: {err}')
 
-    articles = query_articles_into_subjects(query_params)
-    
-    return articles
-
-def query_articles_into_subjects(query_params):
-
-    dates_to_query = get_dates_from_parameters(query_params)
     client = DynamoClient()
-    kwargs = {}
-    for query_date in dates_to_query:
-        logging.info(f'querying on date {query_date}')
-        kwargs['subject_matter'] = query_params['subject_matter']
-        kwargs['dates_to_articles'] = client.query_item(query_date)
-    response = SubjectModel(**kwargs) 
+    query_dates = get_dates_from_parameters(query_params)
+    articles = client.query_dates(query_dates)
+    chat_client = ChatClient()
+    for article in articles:
+        if chat_client.is_relevant_to_subject(article['headline'], query_params['subject_matter']):
 
-    return response
+    return 
 
 def get_dates_from_parameters(query_params):
     if 'search_date' in query_params:
