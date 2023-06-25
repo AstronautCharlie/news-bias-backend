@@ -21,7 +21,7 @@ class DynamoClient():
             logging.error(f'DynamoClient error :: query failed with key {key_condition_expression} :: {response}')
         
     def query_dates(self, dates_to_query):
-        response = {} 
+        response = [] 
         for query_date in dates_to_query:
-            response[query_date] = self.query_item(query_date)
+            response.append = self.query_item(query_date)
         return response

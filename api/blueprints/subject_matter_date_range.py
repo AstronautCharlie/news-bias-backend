@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from clients.dynamo_client import DynamoClient
-from models.subject_model import SubjectModel
+from clients.chat_client import ChatClient
 import logging
 from datetime import datetime, timedelta 
 
@@ -23,10 +23,14 @@ def get_subject_matter_in_date_range():
     query_dates = get_dates_from_parameters(query_params)
     articles = client.query_dates(query_dates)
     chat_client = ChatClient()
-    for article in articles:
-        if chat_client.is_relevant_to_subject(article['headline'], query_params['subject_matter']):
 
-    return 
+    response = {'subject_matter': query_params['subject_matter'], 'articles': []}
+    for article in articles:
+        new_item = {'headline': article['headline']}
+        new_item['is_relevant'] = chat_client.is_headline_relevant_to_subject(article['headline'], query_params['subject_matter'])
+        response['articles'].append(new_item)
+        
+    return response
 
 def get_dates_from_parameters(query_params):
     if 'search_date' in query_params:
