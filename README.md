@@ -7,7 +7,7 @@ Navigate to top level directory
 Run `python api`
 
 # What's the last thing I did? 
-Moved code for fetching articles in a date range to the DynamoClient. 
+Fixed query parameter error (forgot I need to put quotation marks around url...) and started writing tests
 
 # What's next to do? 
-Create the chat client and use it to guess at which headlines are relevant to the subject matter
+Finish tests for existing stuff, then finish the part of the `/article_search` endpoint that screens headline for relevance
