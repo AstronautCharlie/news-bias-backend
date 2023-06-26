@@ -1,7 +1,7 @@
 import boto3
 import logging
 from boto3.dynamodb.conditions import Key, Attr
-from settings import DynamoConfig
+from ..settings import DynamoConfig
 
 class DynamoClient():
     def __init__(self):
@@ -23,5 +23,5 @@ class DynamoClient():
     def query_dates(self, dates_to_query):
         response = [] 
         for query_date in dates_to_query:
-            response.append = self.query_item(query_date)
+            response.extend(self.query_item(query_date))
         return response

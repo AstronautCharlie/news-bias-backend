@@ -8,16 +8,21 @@ article_search_bp = Blueprint('article_search', __name__)
 
 @article_search_bp.route('/article_search', methods=['GET'])
 def get_subject_matter_in_date_range(): 
+    logging.info(f'response args :: {request.args}')
+
     query_params = {
         'search_date': request.args.get('searchDate'),
         'start_date': request.args.get('startDate'),
         'end_date': request.args.get('endDate'),
         'subject_matter': request.args.get('subjectMatter')
     }
+    query_params = prune_empty_params(query_params)
     try:
         validate_query_parameters(query_params)
     except Exception as err:
         logging.error(f'Query parameter validation failed with error :: {err}')
+
+    logging.info(f'parameters are {query_params}')
 
     client = DynamoClient()
     query_dates = get_dates_from_parameters(query_params)
@@ -29,7 +34,7 @@ def get_subject_matter_in_date_range():
         new_item = {'headline': article['headline']}
         new_item['is_relevant'] = chat_client.is_headline_relevant_to_subject(article['headline'], query_params['subject_matter'])
         response['articles'].append(new_item)
-        
+
     return response
 
 def get_dates_from_parameters(query_params):
@@ -47,6 +52,13 @@ def get_dates_from_parameters(query_params):
             current_date += timedelta(days=1)
         
         return date_range
+    
+def prune_empty_params(query_params):
+    pruned_params = {} 
+    for k, v in query_params.items():
+        if v is not None:
+            pruned_params[k] = v
+    return pruned_params
     
 def validate_query_parameters(query_params):
     date_format = '%Y-%m-%d'
