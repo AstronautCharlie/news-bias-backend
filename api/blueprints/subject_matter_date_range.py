@@ -26,13 +26,13 @@ def get_subject_matter_in_date_range():
 
     client = DynamoClient()
     query_dates = get_dates_from_parameters(query_params)
-    articles = client.query_dates(query_dates)
+    articles = client.query_date_range(query_dates)
     chat_client = ChatClient()
 
     response = {'subject_matter': query_params['subject_matter'], 'articles': []}
     for article in articles:
-        new_item = {'headline': article['headline']}
-        new_item['is_relevant'] = chat_client.is_headline_relevant_to_subject(article['headline'], query_params['subject_matter'])
+        new_item = {'article_headline': article['article_headline']}
+        new_item['is_relevant'] = chat_client.is_headline_relevant_to_subject_matter(article['article_headline'], query_params['subject_matter'])
         response['articles'].append(new_item)
 
     return response
