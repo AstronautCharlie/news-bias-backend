@@ -10,4 +10,5 @@ Run `python api`
 Embeddings are returned in JSON blob. 
 
 # What's next to do? 
-Make front end. Also experiment with how to make relevance screen better - it missed a few obvious cases where it didn't realize 'Joe Biden' and 'Biden' are the same person
+Make front end. Also experiment with how to make relevance screen better - it missed a few obvious cases where it didn't realize 'Joe Biden' and 'Biden' are the same person.
+Clean up article text so we're not using quite so many tokens. 
