@@ -43,7 +43,7 @@ def get_subject_matter_in_date_range():
     for article in relevant_articles:
         logging.info(f'{article["article_headline"]}, {article["embedding"]}')
 
-    return jsonify(response)
+    return jsonify(response.toJSON())
 
 def get_dates_from_parameters(query_params):
     if 'search_date' in query_params:

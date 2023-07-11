@@ -7,7 +7,7 @@ Navigate to top level directory. Set your openAI API key to the environment vari
 Run `python api`
 
 # What's the last thing I did? 
-Got embeddings of relevant articles from API!
+Embeddings are returned in JSON blob. 
 
 # What's next to do? 
-Get the response object to JSONIFY properly, then build the front end I guess
+Make front end. Also experiment with how to make relevance screen better - it missed a few obvious cases where it didn't realize 'Joe Biden' and 'Biden' are the same person
