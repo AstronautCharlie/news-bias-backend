@@ -8,7 +8,6 @@ class ChatClient():
         self.relevance_prompt = ChatClientConfig.DEFAULT_RELEVANCE_PROMPT
         self.model = ChatClientConfig.CHAT_MODEL
         openai.api_key = os.environ.get('OPENAI_API_KEY')
-        logging.info(f'openAI API key is {openai.api_key}')
 
     def is_headline_relevant_to_subject_matter(self, headline, subject_matter):
         prompt = self.create_chat_prompt(headline, subject_matter)

@@ -7,8 +7,7 @@ Navigate to top level directory. Set your openAI API key to the environment vari
 Run `python api`
 
 # What's the last thing I did? 
-Tests for dynamo client (turned out to be kind of irrelevant)
-Got `/article_search` to the point where it should query on relevance except that the flask app isn't reading in the environment variable of the openAI API key yet.
+Got embeddings of relevant articles from API!
 
 # What's next to do? 
-Get the flask app to recognize the openAI API key environment variable. Maybe get the UWSGI server going since I have to do that eventually?
+Get the response object to JSONIFY properly, then build the front end I guess

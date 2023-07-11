@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from clients.dynamo_client import DynamoClient
 from clients.chat_client import ChatClient
+from clients.embedding_client import EmbeddingClient
+from response_schemas.subject_matter_embeddings import SubjectMatterResponse
 import logging
 from datetime import datetime, timedelta 
 
@@ -24,18 +26,24 @@ def get_subject_matter_in_date_range():
 
     logging.info(f'parameters are {query_params}')
 
-    client = DynamoClient()
     query_dates = get_dates_from_parameters(query_params)
+
+    client = DynamoClient()
     articles = client.query_date_range(query_dates)
-    chat_client = ChatClient()
+    response = SubjectMatterResponse(articles=articles, subject_matter=query_params['subject_matter'])
+    response.clean_headlines()
 
-    response = {'subject_matter': query_params['subject_matter'], 'articles': []}
-    for article in articles:
-        new_item = {'article_headline': article['article_headline']}
-        new_item['is_relevant'] = chat_client.is_headline_relevant_to_subject_matter(article['article_headline'], query_params['subject_matter'])
-        response['articles'].append(new_item)
+    tag_articles_by_headline_relevance(response)
+    log_articles_by_relevance(response)
 
-    return response
+    get_relevant_article_embeddings(response)
+
+    relevant_articles = response.get_relevant_articles()
+    logging.info(f'relevant article embeddings')
+    for article in relevant_articles:
+        logging.info(f'{article["article_headline"]}, {article["embedding"]}')
+
+    return jsonify(response)
 
 def get_dates_from_parameters(query_params):
     if 'search_date' in query_params:
@@ -85,3 +93,29 @@ def validate_query_parameters(query_params):
             datetime.strptime(query_params['end_date'], date_format)
         except:
             raise ValueError(f'Parameter validation failed: start/end dates ({query_params["start_date"]}/{query_params["end_date"]}) must be of the form "YYYY-MM-DD"')
+
+def tag_articles_by_headline_relevance(response):
+    client = ChatClient()
+
+    for article in response.articles:
+        article['is_relevant'] = client.is_headline_relevant_to_subject_matter(article['article_headline'], response.subject_matter)        
+
+def log_articles_by_relevance(response): 
+    logging.info('Relevant articles:')
+    relevant_articles = response.get_relevant_articles()
+    logging.info([article['article_headline'] for article in relevant_articles])
+
+    logging.info('Irrelevant articles:')
+    irrelevant_articles = response.get_irrelevant_articles()
+    logging.info([article['article_headline'] for article in irrelevant_articles])
+
+    logging.info('Articles of ambiguous relevance')
+    ambiguous_articles = response.get_ambiguously_relevant_articles()
+    logging.info([article['article_headline'] for article in ambiguous_articles])
+
+def get_relevant_article_embeddings(response):
+    client = EmbeddingClient()
+    relevant_articles = response.get_relevant_articles()
+    for article in relevant_articles:
+        article_embedding = client.get_embedding(article['article_text'])
+        article['embedding'] = article_embedding
