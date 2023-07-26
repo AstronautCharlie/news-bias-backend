@@ -5,24 +5,26 @@ from clients.embedding_client import EmbeddingClient
 from response_schemas.subject_matter_embeddings import SubjectMatterResponse
 import logging
 from datetime import datetime, timedelta 
+import json
 
 article_search_bp = Blueprint('article_search', __name__)
 
-@article_search_bp.route('/article_search', methods=['GET'])
+@article_search_bp.route('/article_search', methods=['GET', 'POST'])
 def get_subject_matter_in_date_range(): 
-    logging.info(f'response args :: {request.args}')
+
+    request_args = request.get_json()
 
     query_params = {
-        'search_date': request.args.get('searchDate'),
-        'start_date': request.args.get('startDate'),
-        'end_date': request.args.get('endDate'),
-        'subject_matter': request.args.get('subjectMatter')
+        'search_date': request_args.get('searchDate'),
+        'start_date': request_args.get('startDate'),
+        'end_date': request_args.get('endDate'),
+        'subject_matter': request_args.get('subjectMatter')
     }
     query_params = prune_empty_params(query_params)
-    try:
-        validate_query_parameters(query_params)
-    except Exception as err:
-        logging.error(f'Query parameter validation failed with error :: {err}')
+    # try:
+    #     validate_query_parameters(query_params)
+    # except Exception as err:
+    #     logging.error(f'Query parameter validation failed with error :: {err}')
 
     logging.info(f'parameters are {query_params}')
 
@@ -35,13 +37,18 @@ def get_subject_matter_in_date_range():
 
     tag_articles_by_headline_relevance(response)
     log_articles_by_relevance(response)
-
     get_relevant_article_embeddings(response)
 
-    relevant_articles = response.get_relevant_articles()
-    logging.info(f'relevant article embeddings')
-    for article in relevant_articles:
-        logging.info(f'{article["article_headline"]}, {article["embedding"]}')
+    json_response = json.loads(response.toJSON())
+    logging.info(f'response keys top level :: {json_response.keys()}')
+    first_article = None
+    for article in json_response['articles']:
+        if article['is_relevant'] == 'Yes':
+            first_article = article
+            break
+    if first_article is not None:
+        for k, v in first_article.items():
+            logging.info(f'key: {k} :: value: {str(v)[:1000]}')
 
     return jsonify(response.toJSON())
 
@@ -64,35 +71,35 @@ def get_dates_from_parameters(query_params):
 def prune_empty_params(query_params):
     pruned_params = {} 
     for k, v in query_params.items():
-        if v is not None:
+        if v is not None and len(str(v)) > 0 and not str(v).isspace():
             pruned_params[k] = v
     return pruned_params
     
-def validate_query_parameters(query_params):
-    date_format = '%Y-%m-%d'
+# def validate_query_parameters(query_params):
+#     date_format = '%Y-%m-%d'
 
-    if 'subject_matter' not in query_params:
-        raise ValueError('Parameter validation failed: \'subject matter\' is a required parameter')
+#     if 'subject_matter' not in query_params:
+#         raise ValueError('Parameter validation failed: \'subject matter\' is a required parameter')
 
-    if 'search_date' in query_params:
-        if ('start_date' in query_params or 'end_date' in query_params):
-            raise ValueError('Parameter validation failed: should only have one of \'search_date\' and \'start_date\'/\'end_date\'')
-        try:
-            datetime.strptime(query_params['search_date'], date_format)
-        except:
-            raise ValueError(f'Parameter validation failed: search date ({query_params["search_date"]}) must be of the form "YYYY-MM-DD"')
+#     if 'search_date' in query_params:
+#         if ('start_date' in query_params or 'end_date' in query_params):
+#             raise ValueError('Parameter validation failed: should only have one of \'search_date\' and \'start_date\'/\'end_date\'')
+#         try:
+#             datetime.strptime(query_params['search_date'], date_format)
+#         except:
+#             raise ValueError(f'Parameter validation failed: search date ({query_params["search_date"]}) must be of the form "YYYY-MM-DD"')
     
-    if ('start_date' in query_params and 'end_date' not in query_params) or ('start_date' not in query_params and 'end_date' in query_params):
-        raise ValueError('Parameter validation failed: cannot have one of \'start_date\'/\'end_date\' without the other')
+#     if ('start_date' in query_params and 'end_date' not in query_params) or ('start_date' not in query_params and 'end_date' in query_params):
+#         raise ValueError('Parameter validation failed: cannot have one of \'start_date\'/\'end_date\' without the other')
     
-    if ('start_date' in query_params) and ('end_date' in query_params):
-        if datetime.strptime(query_params['start_date'], '%Y-%m-%d') > datetime.striptime(query_params['end_date'], '%Y-%m-%d'): 
-            raise ValueError(f'Parameter validation failed: start date ({query_params["start_date"]}) is later than end date ({query_params["end_date"]})')
-        try:
-            datetime.strptime(query_params['start_date'], date_format)
-            datetime.strptime(query_params['end_date'], date_format)
-        except:
-            raise ValueError(f'Parameter validation failed: start/end dates ({query_params["start_date"]}/{query_params["end_date"]}) must be of the form "YYYY-MM-DD"')
+#     if ('start_date' in query_params) and ('end_date' in query_params):
+#         if datetime.strptime(query_params['start_date'], '%Y-%m-%d') > datetime.striptime(query_params['end_date'], '%Y-%m-%d'): 
+#             raise ValueError(f'Parameter validation failed: start date ({query_params["start_date"]}) is later than end date ({query_params["end_date"]})')
+#         try:
+#             datetime.strptime(query_params['start_date'], date_format)
+#             datetime.strptime(query_params['end_date'], date_format)
+#         except:
+#             raise ValueError(f'Parameter validation failed: start/end dates ({query_params["start_date"]}/{query_params["end_date"]}) must be of the form "YYYY-MM-DD"')
 
 def tag_articles_by_headline_relevance(response):
     client = ChatClient()
@@ -118,4 +125,4 @@ def get_relevant_article_embeddings(response):
     relevant_articles = response.get_relevant_articles()
     for article in relevant_articles:
         article_embedding = client.get_embedding(article['article_text'])
-        article['embedding'] = article_embedding
+        article['embedding'] = article_embedding 
