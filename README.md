@@ -7,8 +7,13 @@ Navigate to top level directory. Set your openAI API key to the environment vari
 Run `python api`
 
 # What's the last thing I did? 
-Embeddings are returned in JSON blob. 
+Made first pass at topic coverage endpoint. Need to debug
 
 # What's next to do? 
-Make front end. Also experiment with how to make relevance screen better - it missed a few obvious cases where it didn't realize 'Joe Biden' and 'Biden' are the same person.
-Clean up article text so we're not using quite so many tokens. 
+We're pivoting - start with simple topic coverage by headline analysis. For a given date range, track how much each news source covered a given topic, and pick out what the most common headline topics were. This will mean I have to go back and fix the scrapers.... but that had to happen eventually anyway. 
+
+I added an Article class to store responses from DynamoDB, and subject_matter_embeddings hasn't been updated to reflect this change - it still expects articles to be dictionaries, so it's broken. Fix it. 
+
+Add tokens consumed to logs
+
+Debug `/topics`

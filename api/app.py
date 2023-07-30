@@ -1,4 +1,5 @@
 from blueprints.subject_matter_date_range import article_search_bp
+from blueprints.topic_coverage import topic_coverage_bp
 from blueprints.healthcheck import healthcheck_bp
 import logging
 
@@ -19,5 +20,6 @@ def configure_app_logging():
 
 def register_blueprints(app):
     app.register_blueprint(healthcheck_bp)
-    app.register_blueprint(article_search_bp)
+    #app.register_blueprint(article_search_bp)
+    app.register_blueprint(topic_coverage_bp)
     return app

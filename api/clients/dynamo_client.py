@@ -1,6 +1,7 @@
 import boto3
 import logging
 from boto3.dynamodb.conditions import Key, Attr
+from models.article import Article
 from settings import DynamoConfig
 
 class DynamoClient():
@@ -16,11 +17,12 @@ class DynamoClient():
         }
         response = self.table.query(**kwargs)
         try:
-            return response['Items']
+            new_article = Article(response['Items'])
+            return new_article
         except:
-            logging.error(f'DynamoClient error :: query failed with key {key_condition_expression} :: {response}')
+            logging.error(f'DynamoClient error :: object returned from DB has no field "Items" {key_condition_expression} :: {response}')
         
-    def query_date_range(self, dates_to_query):
+    def query_date_range_for_articles(self, dates_to_query):
         response = [] 
         for query_date in dates_to_query:
             response.extend(self.query_date(query_date))

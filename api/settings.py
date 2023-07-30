@@ -1,6 +1,6 @@
 class DynamoConfig:
     TABLE_NAME = 'raw_stories'
-    DYNAMODB_QUERY_LIMIT = 10
+    DYNAMODB_QUERY_LIMIT = 50
 
 class ChatClientConfig:
     DEFAULT_RELEVANCE_PROMPT = 'Is the article with the headline "{}" likely to be relevant to the subject of "{}"? Answer "yes" or "no"'

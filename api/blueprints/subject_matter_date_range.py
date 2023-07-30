@@ -4,14 +4,14 @@ from clients.chat_client import ChatClient
 from clients.embedding_client import EmbeddingClient
 from response_schemas.subject_matter_embeddings import SubjectMatterResponse
 import logging
-from datetime import datetime, timedelta 
+from utils import get_dates_from_parameters, prune_empty_params
 import json
 
 article_search_bp = Blueprint('article_search', __name__)
 
 @article_search_bp.route('/article_search', methods=['GET', 'POST'])
 def get_subject_matter_in_date_range(): 
-
+    logging.info(f'{request.get_json()}')
     request_args = request.get_json()
 
     query_params = {
@@ -21,11 +21,6 @@ def get_subject_matter_in_date_range():
         'subject_matter': request_args.get('subjectMatter')
     }
     query_params = prune_empty_params(query_params)
-    # try:
-    #     validate_query_parameters(query_params)
-    # except Exception as err:
-    #     logging.error(f'Query parameter validation failed with error :: {err}')
-
     logging.info(f'parameters are {query_params}')
 
     query_dates = get_dates_from_parameters(query_params)
@@ -38,6 +33,7 @@ def get_subject_matter_in_date_range():
     tag_articles_by_headline_relevance(response)
     log_articles_by_relevance(response)
     get_relevant_article_embeddings(response)
+    remove_irrelevant_articles(response)
 
     json_response = json.loads(response.toJSON())
     logging.info(f'response keys top level :: {json_response.keys()}')
@@ -51,29 +47,6 @@ def get_subject_matter_in_date_range():
             logging.info(f'key: {k} :: value: {str(v)[:1000]}')
 
     return jsonify(response.toJSON())
-
-def get_dates_from_parameters(query_params):
-    if 'search_date' in query_params:
-        return [query_params['search_date']]
-    else:
-        date_format = '%Y-%m-%d'
-        start_date = datetime.strptime(query_params['start_date'], date_format)
-        end_date = datetime.strptime(query_params['end_date'], date_format)
-
-        date_range = [] 
-        current_date = start_date 
-        while current_date <= end_date: 
-            date_range.append(current_date.strftime(date_format))
-            current_date += timedelta(days=1)
-        
-        return date_range
-    
-def prune_empty_params(query_params):
-    pruned_params = {} 
-    for k, v in query_params.items():
-        if v is not None and len(str(v)) > 0 and not str(v).isspace():
-            pruned_params[k] = v
-    return pruned_params
     
 # def validate_query_parameters(query_params):
 #     date_format = '%Y-%m-%d'
@@ -103,7 +76,6 @@ def prune_empty_params(query_params):
 
 def tag_articles_by_headline_relevance(response):
     client = ChatClient()
-
     for article in response.articles:
         article['is_relevant'] = client.is_headline_relevant_to_subject_matter(article['article_headline'], response.subject_matter)        
 
@@ -126,3 +98,10 @@ def get_relevant_article_embeddings(response):
     for article in relevant_articles:
         article_embedding = client.get_embedding(article['article_text'])
         article['embedding'] = article_embedding 
+
+def remove_irrelevant_articles(response):
+    articles_to_keep = [] 
+    for article in response.articles:
+        if article['is_relevant'] == 'Yes':
+            articles_to_keep.append(article)
+    response.articles = articles_to_keep
