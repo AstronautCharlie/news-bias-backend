@@ -26,3 +26,6 @@ class Article:
     
     def is_ambiguously_relevant(self):
         return self.relevance.lower() not in ['yes', 'no']
+    
+    def get_property(self, property_name):
+        return getattr(self, property_name)

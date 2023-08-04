@@ -21,7 +21,8 @@ class ChatClient():
         based on the 'headline'
         """
         for article in articles:
-            text_to_scan = article[text_header]
+            logging.info(f'tagging story with headline :: {article.article_headline}')
+            text_to_scan = article.get_property(text_header)
             relevance_response = self.is_text_relevant_to_subject_matter(text_to_scan, subject_matter)
             article.set_relevance(relevance_response)
         return articles

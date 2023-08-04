@@ -11,11 +11,7 @@ topic_coverage_bp = Blueprint('topic_coverage', __name__)
 
 @topic_coverage_bp.route('/topic_coverage', methods=['GET', 'POST'])
 def topic_coverage():
-    logging.info(f'request is :: {request}')
-    logging.info(f'{request.args}')
-    #request_args = request.get_json()
     request_args = request.args
-    logging.info(f'request args are :: {request_args}')
     query_params = {
         'search_date': request_args.get('searchDate'),
         'start_date': request_args.get('startDate'),
@@ -26,22 +22,21 @@ def topic_coverage():
     query_dates = get_dates_from_parameters(query_params)
     query_topic = query_params['topic']
 
-    logging.info(f'making clients')
     db_client = DynamoClient()
     chat_client = ChatClient()
 
     logging.info('querying db')
-    articles = db_client.query_date_range(query_dates)
+    articles = db_client.query_date_range_for_articles(query_dates)
+    logging.info('tagging stories by relevance')
     articles = chat_client.tag_stories_by_relevance(articles, query_topic)
 
-    logging.info('creating response')
     # Calculate coverage 
     response = TopicCoverageResponse(articles, query_topic)
     response.calculate_coverage()
 
-    final_response = response.build_response()
-    logging.info(f'subject matter :: {final_response.topic}')
-    logging.info(f'coverage :: {final_response.coverage}')
-    for a in final_response.articles:
+    final_response = response.build_json_response()
+    logging.info(f'subject matter :: {response.topic}')
+    logging.info(f'coverage :: {response.coverage}')
+    for a in response.articles:
         logging.info(f'{a.article_headline} :: relevance? {a.relevance}')
-    return response.build_response()
+    return final_response

@@ -1,3 +1,10 @@
+class BaseConfig:
+    # News sources supported by API, in the format they appear in the DB
+    SOURCES = [
+        'fox',
+        'cnn'
+    ]
+
 class DynamoConfig:
     TABLE_NAME = 'raw_stories'
     DYNAMODB_QUERY_LIMIT = 50

@@ -7,13 +7,14 @@ Navigate to top level directory. Set your openAI API key to the environment vari
 Run `python api`
 
 # What's the last thing I did? 
-Made first pass at topic coverage endpoint. Need to debug
+Topic coverage endpoint works, but needs pagination - right now it's pulling 50 at a time, and that takes too long. Add pagination with page size...25? 
 
 # What's next to do? 
-We're pivoting - start with simple topic coverage by headline analysis. For a given date range, track how much each news source covered a given topic, and pick out what the most common headline topics were. This will mean I have to go back and fix the scrapers.... but that had to happen eventually anyway. 
+Implement pagination, then play around to see what trends I can discover. 
 
-I added an Article class to store responses from DynamoDB, and subject_matter_embeddings hasn't been updated to reflect this change - it still expects articles to be dictionaries, so it's broken. Fix it. 
+Honestly, probably fix the damn scrapers.
 
 Add tokens consumed to logs
 
-Debug `/topics`
+I added an Article class to store responses from DynamoDB, and subject_matter_embeddings hasn't been updated to reflect this change - it still expects articles to be dictionaries, so it's broken. Fix it. 
+

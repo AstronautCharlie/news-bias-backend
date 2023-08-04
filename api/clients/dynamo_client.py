@@ -17,13 +17,20 @@ class DynamoClient():
         }
         response = self.table.query(**kwargs)
         try:
-            new_article = Article(response['Items'])
-            return new_article
+            articles_on_day = response['Items']
+            new_articles = []
+            for article in articles_on_day:
+                new_article = Article(article)
+                new_articles.append(new_article)
+            return new_articles
         except:
-            logging.error(f'DynamoClient error :: object returned from DB has no field "Items" {key_condition_expression} :: {response}')
+            logging.error(f'DynamoClient error :: failed to convert DB response into Articles {key_condition_expression} :: {str(response)[:5000]} :: truncating response at 5000 characters')
         
     def query_date_range_for_articles(self, dates_to_query):
         response = [] 
         for query_date in dates_to_query:
+            articles_on_date = self.query_date(query_date)
+            if articles_on_date is None:
+                logging.info(f'no articles found on date {query_date}')
             response.extend(self.query_date(query_date))
         return response
