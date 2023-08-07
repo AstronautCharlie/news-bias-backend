@@ -16,17 +16,19 @@ def topic_coverage():
         'search_date': request_args.get('searchDate'),
         'start_date': request_args.get('startDate'),
         'end_date': request_args.get('endDate'),
-        'topic': request_args.get('topic')
+        'topic': request_args.get('topic'),
+        'last_evaluted_key': request_args.get('lastEvaluatedKey')
     }
-    query_params = prune_empty_params(query_params)
+    logging.info(f'query params are :: {query_params}')
     query_dates = get_dates_from_parameters(query_params)
+    logging.info(f'got query dates from get_dates_form_parameters :: {query_dates}')
     query_topic = query_params['topic']
 
     db_client = DynamoClient()
     chat_client = ChatClient()
 
     logging.info('querying db')
-    articles = db_client.query_date_range_for_articles(query_dates)
+    articles = db_client.query_date_range_for_articles(query_dates, query_params['last_evaluted_key'])
     logging.info('tagging stories by relevance')
     articles = chat_client.tag_stories_by_relevance(articles, query_topic)
 

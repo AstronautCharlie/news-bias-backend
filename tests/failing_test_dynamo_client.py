@@ -1,8 +1,10 @@
 from unittest import TestCase
 from unittest.mock import patch
 from api.clients.dynamo_client import DynamoClient
+from api.models.article import Article
 import moto
 import boto3
+import logging
 
 class TestDynamoClient(TestCase):
 
@@ -34,16 +36,20 @@ class TestDynamoClient(TestCase):
                 'source': 'fauxnews',
                 'url': 'www.fauxnews.com/example',
                 'link_headline': 'man bites dog'
-            }], [{
+            }, None], [{
                 'date': '2023-01-02',
                 'article_headline': 'dog bites back',
                 'article_text': 'just what it says on the tin',
                 'source': 'fauxnews',
                 'url': 'www.fauxnews.com/example',
                 'link_headline': 'dog bites back'
-            }]
+            }, None]
         ]
         mock_query.side_effect = mock_articles
-        response = client.query_date_range(['2023-01-01', '2023-01-02'])
+        response = client.query_date_range_for_articles(['2023-01-01', '2023-01-02'])
         # Expected response is a list containing dictionaries representing articles
-        assert response == [mock_articles[0][0], mock_articles[1][0]]
+        print('response is :: {response}')
+
+        expected_article1 = Article(mock_articles[0][0])
+        expected_article2 = Article(mock_articles[1][0])
+        assert response == [expected_article1, expected_article2]
